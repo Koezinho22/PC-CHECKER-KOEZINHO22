@@ -364,8 +364,17 @@ mkdir "%SAFEDIR%" 2>nul
 set "SENDPS1=%SAFEDIR%\send.ps1"
 set "SAFEHITS=%SAFEDIR%\hits.txt"
 copy "%HITSFILE%" "%SAFEHITS%" >nul 2>nul
-echo Sending to Discord...
+echo.
+echo [DEBUG] HITSFILE = %HITSFILE%
+echo [DEBUG] SAFEHITS = %SAFEHITS%
+echo [DEBUG] SENDPS1  = %SENDPS1%
+if exist "%HITSFILE%" (echo [DEBUG] HITSFILE exists) else (echo [DEBUG] HITSFILE MISSING)
+if exist "%SAFEHITS%" (echo [DEBUG] SAFEHITS exists) else (echo [DEBUG] SAFEHITS MISSING)
+echo.
+echo Downloading send.ps1...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "(New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Koezinho22/PC-CHECKER-KOEZINHO22/main/send.ps1','%SENDPS1%')"
+if exist "%SENDPS1%" (echo [DEBUG] send.ps1 downloaded OK) else (echo [DEBUG] send.ps1 DOWNLOAD FAILED)
+echo Sending to Discord...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%SENDPS1%" "%SAFEHITS%" "!SUSPCOUNT!" "%WEBHOOK_URL%" "%COMPUTERNAME%" "%USERNAME%" "%DATE% %TIME%"
 
 :: Clean up both temp dirs
