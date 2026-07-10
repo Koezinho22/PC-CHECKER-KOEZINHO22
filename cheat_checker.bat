@@ -232,7 +232,7 @@ for %%H in ("%CHROME_H%" "%EDGE_H%") do (
 :: Discord cache - scan for URLs containing cheat/executor keywords
 set "DISCORD_CACHE=%APPDATA%\discord\Cache\Cache_Data"
 if exist "%DISCORD_CACHE%" (
-    >>"%HITSFILE%" echo --- Discord Cached URLs (cheat keywords) ---
+    >>"%HITSFILE%" echo [Discord Cached URLs - cheat keywords]
     powershell -NoProfile -Command "$d='%DISCORD_CACHE%'; Get-ChildItem $d -File -ErrorAction SilentlyContinue | ForEach-Object { try { $t=[System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($_.FullName)); ($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 15 -and $_ -match 'http' -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|executor|inject|cheat|hack|exploit|\.exe|mediafire|cdn\.discordapp'} } catch {} } | Select-Object -Unique" >> "%HITSFILE%" 2>nul
     >>"%HITSFILE%" echo.
 )
@@ -251,7 +251,7 @@ for /f "delims=" %%D in ('ipconfig /displaydns 2^>nul ^| findstr /i "voidstrap v
 for /f "delims=" %%H in ('type "C:\Windows\System32\drivers\etc\hosts" 2^>nul ^| findstr /v "^#" ^| findstr /v "^$" ^| findstr /v "localhost" ^| findstr /r "[0-9]"') do (
     set "HITSECTION=HOSTS FILE" & set "HITPATH=%%H" & call :flag_hit
 )
->>"%HITSFILE%" echo --- Active Outbound Connections ---
+>>"%HITSFILE%" echo [Active Outbound Connections]
 powershell -NoProfile -Command "Get-NetTCPConnection -State Established 2>$null | Where-Object {$_.RemoteAddress -notmatch '^(127\.|0\.|::1|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)'} | ForEach-Object { $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; \"  $($proc.Name) (PID $($_.OwningProcess)) -> $($_.RemoteAddress):$($_.RemotePort)\" } | Sort-Object -Unique" >> "%HITSFILE%" 2>nul
 
 :: ============================================================
