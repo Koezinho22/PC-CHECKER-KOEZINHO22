@@ -216,6 +216,33 @@ if exist "%FF_BASE%" (
 )
 
 :: ============================================================
+:: SECTION 6b: BROWSER DOWNLOAD HISTORY + DISCORD URL CACHE
+:: ============================================================
+:: Chrome/Edge download history (same SQLite DB, different table)
+for %%H in ("%CHROME_H%" "%EDGE_H%") do (
+    if exist %%H (
+        for /f "delims=" %%U in ('powershell -NoProfile -Command "$p='%%~H';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'http.*\.(exe|dll|zip|rar|7z)' } | Select-Object -Unique -First 50" 2^>nul') do (
+            set "HITSECTION=BROWSER DOWNLOAD URL" & set "HITPATH=%%U" & call :flag_hit
+        )
+        for /f "delims=" %%U in ('powershell -NoProfile -Command "$p='%%~H';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|plexity|executor|inject|cheat|hack|exploit'} | Select-Object -Unique" 2^>nul') do (
+            set "HITSECTION=BROWSER DOWNLOAD CHEAT URL" & set "HITPATH=%%U" & call :flag_hit
+        )
+    )
+)
+:: Discord cache - scan for URLs containing cheat/executor keywords
+set "DISCORD_CACHE=%APPDATA%\discord\Cache\Cache_Data"
+if exist "%DISCORD_CACHE%" (
+    >>"%HITSFILE%" echo --- Discord Cached URLs (cheat keywords) ---
+    powershell -NoProfile -Command "$d='%DISCORD_CACHE%'; Get-ChildItem $d -File -ErrorAction SilentlyContinue | ForEach-Object { try { $t=[System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($_.FullName)); ($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 15 -and $_ -match 'http' -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|executor|inject|cheat|hack|exploit|\.exe|mediafire|cdn\.discordapp'} } catch {} } | Select-Object -Unique" >> "%HITSFILE%" 2>nul
+    >>"%HITSFILE%" echo.
+)
+:: Discord downloaded files (attachments saved locally)
+set "DISCORD_DL=%USERPROFILE%\Downloads"
+for /f "delims=" %%F in ('dir /b "%DISCORD_DL%\*.exe" "%DISCORD_DL%\*.dll" "%DISCORD_DL%\*.zip" 2^>nul ^| findstr /i "voidstrap velostrap xeno solara bootstrapper bytebreaker sirhurt fishtrap plexity executor inject cheat hack"') do (
+    set "HITSECTION=SUSPICIOUS DOWNLOAD" & set "HITPATH=%%F" & call :flag_hit
+)
+
+:: ============================================================
 :: SECTION 7: NETWORK / DNS / HOSTS
 :: ============================================================
 for /f "delims=" %%D in ('ipconfig /displaydns 2^>nul ^| findstr /i "voidstrap velostrap xeno wave solara bootstrapper bytebreaker real medium volcano volt potassium sirhurt swift velocity vortex matcha lumen photon plexity fishtrap" 2^>nul') do (

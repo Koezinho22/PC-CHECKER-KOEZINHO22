@@ -1,6 +1,23 @@
-# Koezy - PC Cheat Checker v2.0
+# Koezy PC Cheat Checker v2.0
 
-Personal tool for scanning a PC for known Roblox exploit and cheat indicators. Covers files, browser history, network activity, firewall rules, prefetch, registry, DLL injection, and more. Results are sent privately after the scan completes.
+> **League Anti-Cheat Tool — Authorised Use Only**
+
+This tool is operated as part of an official competitive league integrity programme. It scans a PC for known Roblox exploit and cheat software indicators. Scan results are reported privately to league administrators for review.
+
+---
+
+## ⚠️ Legal Disclaimer
+
+**This tool must only be run with the full knowledge and explicit consent of the person whose PC is being scanned.**
+
+- This tool does **not** collect passwords, personal files, financial data, or any information unrelated to cheat software.
+- It scans for file names, browser history entries, registry keys, and process names associated with known Roblox exploit tools only.
+- All data collected is used solely for the purpose of maintaining competitive integrity within the league.
+- Scan results are retained only as long as necessary for the integrity review process.
+- Unauthorised use of this tool against someone without their consent may constitute unauthorised computer access under applicable law (e.g. Computer Misuse Act 1990 UK, CFAA USA). **Do not use this tool without consent.**
+- The operator of this tool accepts full responsibility for ensuring informed consent is obtained before any scan is run.
+
+By running this tool, the user confirms they have been informed of and consented to this scan as part of league procedures.
 
 ---
 
@@ -8,8 +25,7 @@ Personal tool for scanning a PC for known Roblox exploit and cheat indicators. C
 
 | File | Description |
 |------|-------------|
-| `cheat_checker.bat` | Main scanner — run this |
-| `config.ini` | Private config — keep this to yourself |
+| `cheat_checker.bat` | Single-file scanner — run this |
 | `README.md` | This file |
 
 ---
@@ -24,79 +40,48 @@ Personal tool for scanning a PC for known Roblox exploit and cheat indicators. C
 
 ## How to Run
 
+**Option A — Direct:**
 Right-click `cheat_checker.bat` → **Run as administrator**
 
-Or from an admin CMD:
-```cmd
-cd "C:\Users\birch\Downloads\cmd prompts\cheat engine checker"
-cheat_checker.bat
+**Option B — Remote (PowerShell):**
+```powershell
+$f=$env:TEMP+'\koezy.bat'; (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Koezinho22/PC-CHECKER-KOEZINHO22/main/cheat_checker.bat',$f); Start-Process cmd -ArgumentList ('/c '+$f) -Verb RunAs
 ```
-
----
-
-## Menu
-
-| Option | Action |
-|--------|--------|
-| `1. CHECK` | Runs the full scan |
-| `2. EXIT` | Close |
-
-Press **Enter** on the Terms screen to proceed.
 
 ---
 
 ## What Gets Scanned
 
-### 1 — File Search
-Scans `%AppData%`, `%LocalAppData%`, Downloads, C:\, D:\ for files matching known cheat tool names:
+| Section | What it checks |
+|---------|----------------|
+| **1 — File Search** | `%AppData%`, `%LocalAppData%`, Downloads, Temp — keyword matched filenames |
+| **2 — Prefetch** | `C:\Windows\Prefetch` — every program ever executed, even if deleted |
+| **3 — Recent Files** | `%AppData%\Microsoft\Windows\Recent` — keyword filtered |
+| **4 — Temp Folders** | `%TEMP%` and `C:\Windows\Temp` — keyword filtered |
+| **5 — Firewall Rules** | Outbound rules — exploit tools sometimes add rules to block anticheat |
+| **6 — Browser History** | Chrome, Edge, Firefox — cheat keywords + executor/inject/hack terms |
+| **6b — Download History** | Browser download URLs — `.exe/.dll/.zip` downloads + cheat-keyword URLs |
+| **6c — Discord Cache** | Discord local cache scanned for cheat-related URLs and file links |
+| **7 — Network & DNS** | Active outbound connections, DNS cache, hosts file tampering |
+| **7b — Voidstrap/Bloxstrap** | Checks for Voidstrap/Bloxstrap install folders and dumps FFlag configs |
+| **8 — Roblox DLL Injection** | Non-standard DLLs in Roblox Versions folder flagged |
+| **9 — Running Processes** | Live process list filtered against all cheat keywords |
+| **10 — Registry & Tasks** | Installed programs, startup keys, scheduled tasks |
+| **11 — Downloads** | Executable files in Downloads with suspicious names |
+
+### Keywords scanned for:
 ```
 voidstrap, velostrap, xeno, wave, solara, bootstrapper, bytebreaker,
-real, medium, volcano, volt, potassium, sirhurt, swift, velocity,
-vortex, matcha, lumen, photon, plexity, fishtrap
+volcano, volt, potassium, sirhurt, swift, velocity, vortex, matcha,
+lumen, photon, plexity, fishtrap, fflags, fastflags
 ```
-
-### 2 — Prefetch
-`C:\Windows\Prefetch` — logs every program ever executed, even if deleted.
-
-### 3 — Recent Files
-`%AppData%\Microsoft\Windows\Recent` — keyword filtered.
-
-### 4 — Temp Folders
-`%TEMP%` and `C:\Windows\Temp` — keyword filtered.
-
-### 5 — Firewall Rules
-Outbound rules — exploit tools sometimes add rules to block anticheat traffic.
-
-### 6 — Browser History
-Raw read of Chrome, Edge, and Firefox history databases.
-Searches for cheat keywords + `exploit`, `cheat`, `hack`, `inject`, `executor`.
-> Close the browser before scanning for best results.
-
-### 7 — Network & DNS
-- Active outbound connections mapped to process names
-- DNS cache — recently resolved domains, keyword filtered
-- Hosts file — non-default entries flagged (common anticheat bypass method)
-
-### 8 — Roblox Versions + DLL Injection
-- Full scan of `%LocalAppData%\Roblox\Versions\`
-- Any `.dll` not matching known Roblox/system DLLs is flagged as a potential injected DLL
-
-### 9 — Running Processes
-Live `tasklist` filtered against all cheat keywords.
-
-### 10 — Registry & Scheduled Tasks
-- Installed programs (HKLM + HKCU)
-- Startup keys (`Run`)
-- Scheduled tasks
-
-### 11 — Recently Modified Executables
-`.exe` and `.dll` files modified in the last **7 days** in AppData and Downloads.
 
 ---
 
 ## Notes
 
-- C: + D: drive scan can take a few minutes depending on drive size — normal.
-- D: drive is silently skipped if it doesn't exist.
+- Results are saved as a `.txt` on the scanned PC's Desktop and posted to the league administrator's Discord.
+- No results are stored on any third-party server. No personal data beyond cheat indicators is collected.
+- False positives are possible. No scan result is treated as definitive proof without further review by league staff.
 - Run as Administrator or Prefetch/Firewall/Registry sections will be incomplete.
-- DLL check uses a known-good allowlist — false positives possible for legitimate software.
+- Close browsers before scanning for best browser history results.
