@@ -358,26 +358,11 @@ copy "%HITSFILE%" "%SAVEFILE%" >nul 2>nul
 echo  Saved to: %SAVEFILE%
 echo.
 
-:: Send to Discord
+:: Send to Discord - download send.ps1 from GitHub and run it
 echo Sending to Discord...
-powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "$hitsFile='%HITSFILE%';" ^
-  "$suspCount=!SUSPCOUNT!;" ^
-  "$url='%WEBHOOK_URL%';" ^
-  "$computerName='%COMPUTERNAME%';" ^
-  "$userName='%USERNAME%';" ^
-  "$dateStr='%DATE% %TIME%';" ^
-  "$color=if($suspCount -gt 0){16711680}else{65280};" ^
-  "$status=if($suspCount -gt 0){'SUSPICIOUS - '+$suspCount+' hit(s)'}else{'CLEAN'};" ^
-  "$embed=[ordered]@{title='KOEZY SCAN - '+$computerName+' / '+$userName;color=$color;description='See attached file.';fields=@([ordered]@{name='Result';value=$status;inline=$true},[ordered]@{name='Hits';value=$suspCount.ToString();inline=$true},[ordered]@{name='Date';value=$dateStr;inline=$false})};" ^
-  "$payload=[ordered]@{username='Koezy Cheat Checker';embeds=@($embed)}|ConvertTo-Json -Depth 10 -Compress;" ^
-  "$boundary=[System.Guid]::NewGuid().ToString('N');" ^
-  "$fileName='koezy_'+$computerName+'.txt';" ^
-  "$fileContent=[System.IO.File]::ReadAllText($hitsFile);" ^
-  "$nl=\"`r`n\";" ^
-  "$body='--'+$boundary+$nl+'Content-Disposition: form-data; name='+[char]34+'payload_json'+[char]34+$nl+'Content-Type: application/json'+$nl+$nl+$payload+$nl+'--'+$boundary+$nl+'Content-Disposition: form-data; name='+[char]34+'file'+[char]34+'; filename='+[char]34+$fileName+[char]34+$nl+'Content-Type: text/plain'+$nl+$nl+$fileContent+$nl+'--'+$boundary+'--';" ^
-  "$bytes=[System.Text.Encoding]::UTF8.GetBytes($body);" ^
-  "try{Invoke-RestMethod -Uri $url -Method Post -Body $bytes -ContentType ('multipart/form-data; boundary='+$boundary) -ErrorAction Stop;Write-Host '[OK] Sent to Discord.'}catch{Write-Host '[ERR] '$_}"
+set "SENDPS1=%TMPDIR%\send.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "(New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Koezinho22/PC-CHECKER-KOEZINHO22/main/send.ps1','%SENDPS1%')" 2>nul
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SENDPS1%" "%HITSFILE%" "!SUSPCOUNT!" "%WEBHOOK_URL%" "%COMPUTERNAME%" "%USERNAME%" "%DATE% %TIME%"
 
 :: Clean up temp
 rmdir /s /q "%TMPDIR%" 2>nul
