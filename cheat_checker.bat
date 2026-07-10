@@ -194,13 +194,13 @@ for /f "delims=" %%F in ('netsh advfirewall firewall show rule name=all 2^>nul ^
 :: ============================================================
 set "CHROME_H=%LOCALAPPDATA%\Google\Chrome\User Data\Default\History"
 if exist "%CHROME_H%" (
-    for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%CHROME_H%';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor'} | Select-Object -Unique" 2^>nul') do (
+    for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%CHROME_H%';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor|script'} | Select-Object -Unique" 2^>nul') do (
         set "HITSECTION=CHROME HISTORY" & set "HITPATH=%%H" & call :flag_hit
     )
 )
 set "EDGE_H=%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\History"
 if exist "%EDGE_H%" (
-    for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%EDGE_H%';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor'} | Select-Object -Unique" 2^>nul') do (
+    for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%EDGE_H%';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor|script'} | Select-Object -Unique" 2^>nul') do (
         set "HITSECTION=EDGE HISTORY" & set "HITPATH=%%H" & call :flag_hit
     )
 )
@@ -208,7 +208,7 @@ set "FF_BASE=%APPDATA%\Mozilla\Firefox\Profiles"
 if exist "%FF_BASE%" (
     for /d %%P in ("%FF_BASE%\*") do (
         if exist "%%P\places.sqlite" (
-            for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%%P\places.sqlite';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor'} | Select-Object -Unique" 2^>nul') do (
+            for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%%P\places.sqlite';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor|script'} | Select-Object -Unique" 2^>nul') do (
                 set "HITSECTION=FIREFOX HISTORY" & set "HITPATH=%%H" & call :flag_hit
             )
         )
@@ -253,6 +253,12 @@ for /f "delims=" %%H in ('type "C:\Windows\System32\drivers\etc\hosts" 2^>nul ^|
 )
 >>"%HITSFILE%" echo [Active Outbound Connections]
 powershell -NoProfile -Command "Get-NetTCPConnection -State Established 2>$null | Where-Object {$_.RemoteAddress -notmatch '^(127\.|0\.|::1|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)'} | ForEach-Object { $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; \"  $($proc.Name) (PID $($_.OwningProcess)) -> $($_.RemoteAddress):$($_.RemotePort)\" } | Sort-Object -Unique" >> "%HITSFILE%" 2>nul
+>>"%HITSFILE%" echo.
+>>"%HITSFILE%" echo [Per-App Network Data Usage]
+powershell -NoProfile -Command "Get-NetAdapterStatistics -ErrorAction SilentlyContinue | ForEach-Object { \"  $($_.Name) - Sent: $([math]::Round($_.SentBytes/1MB,2)) MB  Received: $([math]::Round($_.ReceivedBytes/1MB,2)) MB\" }" >> "%HITSFILE%" 2>nul
+>>"%HITSFILE%" echo.
+>>"%HITSFILE%" echo [Recent Network Activity by Process]
+powershell -NoProfile -Command "Get-NetTCPConnection -ErrorAction SilentlyContinue | Where-Object {$_.State -ne 'Closed'} | ForEach-Object { $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; if($proc){\"  $($proc.Name) -> $($_.RemoteAddress):$($_.RemotePort) [$($_.State)]\"} } | Sort-Object -Unique | Select-Object -First 40" >> "%HITSFILE%" 2>nul
 
 :: ============================================================
 :: SECTION 7b: VOIDSTRAP / BLOXSTRAP SETTINGS + FFLAGS
@@ -266,7 +272,7 @@ for %%D in ("%VS_APP%" "%VS_LOC%" "%BS_APP%") do (
         :: Dump any FFlag config files found
         for /f "delims=" %%F in ('dir /s /b %%D 2^>nul ^| findstr /i "ClientAppSettings fflag fastflag config settings" 2^>nul') do (
             set "HITSECTION=VOIDSTRAP FFLAGS FILE" & set "HITPATH=%%F" & call :flag_hit
-            >> "%HITSFILE%" echo   --- Contents of %%F ---
+            >> "%HITSFILE%" echo [Contents of %%F]
             type "%%F" >> "%HITSFILE%" 2>nul
             >> "%HITSFILE%" echo.
         )
@@ -276,7 +282,7 @@ for %%D in ("%VS_APP%" "%VS_LOC%" "%BS_APP%") do (
 set "RBX_FFLAGS=%LOCALAPPDATA%\Roblox\GlobalBasicSettings_13.xml"
 if exist "%RBX_FFLAGS%" (
     set "HITSECTION=ROBLOX FFLAGS SETTINGS" & set "HITPATH=%RBX_FFLAGS%" & call :flag_hit
-    >> "%HITSFILE%" echo   --- Contents ---
+    >> "%HITSFILE%" echo [Contents]
     type "%RBX_FFLAGS%" >> "%HITSFILE%" 2>nul
     >> "%HITSFILE%" echo.
 )
@@ -322,6 +328,55 @@ for /f "delims=" %%F in ('dir /b "%LOC4%\*.exe" "%LOC4%\*.dll" 2^>nul') do (
 )
 
 :: ============================================================
+:: SECTION 12: TASK MANAGER - ALL RUNNING PROCESSES + DETAILS
+:: ============================================================
+>>"%HITSFILE%" echo [All Running Processes]
+powershell -NoProfile -Command "Get-Process | Sort-Object CPU -Descending | Select-Object -First 60 | ForEach-Object { \"  $($_.Name) (PID $($_.Id)) CPU:$([math]::Round($_.CPU,1)) MEM:$([math]::Round($_.WorkingSet64/1MB,1))MB Path:$($_.Path)\" }" >> "%HITSFILE%" 2>nul
+>>"%HITSFILE%" echo.
+:: Flag any processes matching cheat keywords
+for /f "tokens=1" %%P in ('tasklist /fo csv /nh 2^>nul ^| findstr /i "voidstrap velostrap xeno wave solara bootstrapper bytebreaker volcano volt potassium sirhurt swift velocity vortex matcha lumen photon plexity fishtrap executor"') do (
+    set "HITSECTION=TASK MANAGER PROCESS" & set "HITPATH=%%P" & call :flag_hit
+)
+
+:: ============================================================
+:: SECTION 13: BRAVE BROWSER HISTORY
+:: ============================================================
+set "BRAVE_H=%APPDATA%\BraveSoftware\Brave-Browser\User Data\Default\History"
+if exist "%BRAVE_H%" (
+    for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%BRAVE_H%';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor|script'} | Select-Object -Unique" 2^>nul') do (
+        set "HITSECTION=BRAVE HISTORY" & set "HITPATH=%%H" & call :flag_hit
+    )
+)
+
+:: ============================================================
+:: SECTION 14: FULL C + D DRIVE SCAN (keywords only, no /s on root)
+:: ============================================================
+set "FULLKW=voidstrap velostrap xeno wave solara bootstrapper bytebreaker real medium volcano volt potassium sirhurt swift velocity vortex matcha lumen photon plexity fishtrap bloxstrap"
+:: Scan user profile recursively for keyword-named files
+for /f "delims=" %%F in ('dir /s /b "%USERPROFILE%" 2^>nul ^| findstr /i "%FULLKW%"') do (
+    set "HITSECTION=FULL SCAN C USER" & set "HITPATH=%%F" & call :flag_hit
+)
+if exist "D:\" (
+    for /f "delims=" %%F in ('dir /b "D:\" 2^>nul ^| findstr /i "%FULLKW%"') do (
+        set "HITSECTION=FULL SCAN D ROOT" & set "HITPATH=%%F" & call :flag_hit
+    )
+    for /f "delims=" %%F in ('dir /s /b "D:\Users" 2^>nul ^| findstr /i "%FULLKW%"') do (
+        set "HITSECTION=FULL SCAN D USERS" & set "HITPATH=%%F" & call :flag_hit
+    )
+)
+
+:: ============================================================
+:: SECTION 15: FIREWALL ALLOWED APPS
+:: ============================================================
+>>"%HITSFILE%" echo [Windows Firewall - Allowed Apps]
+powershell -NoProfile -Command "Get-NetFirewallRule -Enabled True -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | ForEach-Object { $prog = ($_ | Get-NetFirewallApplicationFilter -ErrorAction SilentlyContinue).Program; if($prog -and $prog -ne 'Any'){\"  $($_.DisplayName) -> $prog\"} } | Sort-Object -Unique" >> "%HITSFILE%" 2>nul
+>>"%HITSFILE%" echo.
+:: Flag firewall rules matching cheat keywords
+for /f "delims=" %%F in ('powershell -NoProfile -Command "Get-NetFirewallRule -Enabled True -ErrorAction SilentlyContinue | Where-Object {$_.DisplayName -match \"voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|executor\"} | ForEach-Object {$_.DisplayName}" 2^>nul') do (
+    set "HITSECTION=FIREWALL ALLOWED APP" & set "HITPATH=%%F" & call :flag_hit
+)
+
+:: ============================================================
 :: FINALIZE - WRITE FOOTER + PRINT + SEND
 :: ============================================================
 if !SUSPCOUNT!==0 (
@@ -353,7 +408,7 @@ echo ============================================================
 echo.
 
 :: Save results to their Desktop
-set "SAVEFILE=%USERPROFILE%\Desktop\koezy_%COMPUTERNAME%_%DATE:~-4%%DATE:~3,2%%DATE:~0,2%.txt"
+set "SAVEFILE=%USERPROFILE%\Desktop\koezy_%COMPUTERNAME%_%DATE:~-4%-%DATE:~3,2%-%DATE:~0,2%.txt"
 copy "%HITSFILE%" "%SAVEFILE%" >nul 2>nul
 echo  Saved to: %SAVEFILE%
 echo.
@@ -364,16 +419,8 @@ mkdir "%SAFEDIR%" 2>nul
 set "SENDPS1=%SAFEDIR%\send.ps1"
 set "SAFEHITS=%SAFEDIR%\hits.txt"
 copy "%HITSFILE%" "%SAFEHITS%" >nul 2>nul
-echo.
-echo [DEBUG] HITSFILE = %HITSFILE%
-echo [DEBUG] SAFEHITS = %SAFEHITS%
-echo [DEBUG] SENDPS1  = %SENDPS1%
-if exist "%HITSFILE%" (echo [DEBUG] HITSFILE exists) else (echo [DEBUG] HITSFILE MISSING)
-if exist "%SAFEHITS%" (echo [DEBUG] SAFEHITS exists) else (echo [DEBUG] SAFEHITS MISSING)
-echo.
 echo Downloading send.ps1...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "(New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Koezinho22/PC-CHECKER-KOEZINHO22/main/send.ps1','%SENDPS1%')"
-if exist "%SENDPS1%" (echo [DEBUG] send.ps1 downloaded OK) else (echo [DEBUG] send.ps1 DOWNLOAD FAILED)
 echo Sending to Discord...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%SENDPS1%" "%SAFEHITS%" "!SUSPCOUNT!" "%WEBHOOK_URL%" "%COMPUTERNAME%" "%USERNAME%" "%DATE% %TIME%"
 
