@@ -358,19 +358,25 @@ copy "%HITSFILE%" "%SAVEFILE%" >nul 2>nul
 echo  Saved to: %SAVEFILE%
 echo.
 
-:: Send to Discord - download send.ps1 from GitHub and run it
+:: Send to Discord - use C:\koezy_tmp to avoid spaces in path
+set "SAFEDIR=C:\koezy_tmp"
+mkdir "%SAFEDIR%" 2>nul
+set "SENDPS1=%SAFEDIR%\send.ps1"
+set "SAFEHITS=%SAFEDIR%\hits.txt"
+copy "%HITSFILE%" "%SAFEHITS%" >nul 2>nul
 echo Sending to Discord...
-set "SENDPS1=%TMPDIR%\send.ps1"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "(New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Koezinho22/PC-CHECKER-KOEZINHO22/main/send.ps1','%SENDPS1%')" 2>nul
-powershell -NoProfile -ExecutionPolicy Bypass -File "%SENDPS1%" "%HITSFILE%" "!SUSPCOUNT!" "%WEBHOOK_URL%" "%COMPUTERNAME%" "%USERNAME%" "%DATE% %TIME%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "(New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/Koezinho22/PC-CHECKER-KOEZINHO22/main/send.ps1','%SENDPS1%')"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SENDPS1%" "%SAFEHITS%" "!SUSPCOUNT!" "%WEBHOOK_URL%" "%COMPUTERNAME%" "%USERNAME%" "%DATE% %TIME%"
 
-:: Clean up temp
+:: Clean up both temp dirs
 rmdir /s /q "%TMPDIR%" 2>nul
+rmdir /s /q "%SAFEDIR%" 2>nul
 
+echo.
 echo ============================================================
 echo  Press any key to return to menu...
 echo ============================================================
-pause >nul
+pause
 goto menu
 
 :: ============================================================
