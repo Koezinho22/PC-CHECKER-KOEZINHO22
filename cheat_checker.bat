@@ -97,11 +97,13 @@ set "SUSPCOUNT=0"
 
 :: Write hits file header
 (
-echo KOEZY PC CHEAT CHECKER v2.0 - SUSPICIOUS FINDINGS
-echo Computer : %COMPUTERNAME%
-echo User     : %USERNAME%
-echo Date     : %DATE% %TIME%
-echo ============================================================
+echo ====================================================
+echo  KOEZY CHEAT CHECKER - SCAN REPORT
+echo ====================================================
+echo  PC       : %COMPUTERNAME%
+echo  User     : %USERNAME%
+echo  Date     : %DATE% %TIME%
+echo ====================================================
 echo.
 ) > "%HITSFILE%"
 
@@ -128,9 +130,7 @@ set "LOC_TEMP2=C:\Windows\Temp"
 goto skip_flag
 :flag_hit
 set /a SUSPCOUNT+=1
->>"%HITSFILE%" echo [HIT #!SUSPCOUNT!] [!HITSECTION!]
->>"%HITSFILE%" echo   !HITPATH!
->>"%HITSFILE%" echo.
+>>"%HITSFILE%" echo [!SUSPCOUNT!] !HITSECTION! ^| !HITPATH!
 goto :eof
 :skip_flag
 
@@ -384,13 +384,14 @@ for /f "delims=" %%F in ('netsh advfirewall firewall show rule name=all 2^>nul ^
 :: ============================================================
 :: FINALIZE - WRITE FOOTER + PRINT + SEND
 :: ============================================================
+>>"%HITSFILE%" echo.
+>>"%HITSFILE%" echo ====================================================
 if !SUSPCOUNT!==0 (
-    >>"%HITSFILE%" echo NO SUSPICIOUS FINDINGS - All sections clean.
+    >>"%HITSFILE%" echo  RESULT : CLEAN - No suspicious findings.
 ) else (
-    >>"%HITSFILE%" echo ============================================================
-    >>"%HITSFILE%" echo TOTAL SUSPICIOUS HITS: !SUSPCOUNT!
-    >>"%HITSFILE%" echo ============================================================
+    >>"%HITSFILE%" echo  RESULT : SUSPICIOUS - !SUSPCOUNT! hit(s) found.
 )
+>>"%HITSFILE%" echo ====================================================
 cls
 echo ============================================================
 echo           KOEZY - SCAN RESULTS
