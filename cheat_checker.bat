@@ -278,6 +278,30 @@ if exist "%RBX_FFLAGS%" (
     >>"%HITSFILE%" echo   [file contents below]
     powershell -NoProfile -Command "Get-Content '%RBX_FFLAGS%' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 30" >> "%HITSFILE%" 2>nul
 )
+:: Scan all known ClientAppSettings.json locations
+for %%J in (
+    "%LOCALAPPDATA%\Roblox\ClientAppSettings.json"
+    "%APPDATA%\.voidstrap\ClientAppSettings.json"
+    "%LOCALAPPDATA%\Voidstrap\ClientAppSettings.json"
+    "%LOCALAPPDATA%\Bloxstrap\ClientAppSettings.json"
+    "%APPDATA%\Bloxstrap\ClientAppSettings.json"
+) do (
+    if exist %%J (
+        set "HITSECTION=CLIENTAPPSETTINGS JSON" & set "HITPATH=%%~J" & call :flag_hit
+        >>"%HITSFILE%" echo   [file contents below]
+        powershell -NoProfile -Command "Get-Content '%%~J' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 50" >> "%HITSFILE%" 2>nul
+    )
+)
+:: Also scan for any .json files in cheat launcher folders
+for %%D in ("%APPDATA%\.voidstrap" "%LOCALAPPDATA%\Voidstrap" "%LOCALAPPDATA%\Bloxstrap" "%APPDATA%\solara" "%LOCALAPPDATA%\solara" "%APPDATA%\xeno" "%LOCALAPPDATA%\xeno") do (
+    if exist %%D (
+        for /f "delims=" %%F in ('dir /b /s "%%~D\*.json" 2^>nul') do (
+            set "HITSECTION=JSON CONFIG FILE" & set "HITPATH=%%F" & call :flag_hit
+            >>"%HITSFILE%" echo   [file contents below]
+            powershell -NoProfile -Command "Get-Content '%%F' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 30" >> "%HITSFILE%" 2>nul
+        )
+    )
+)
 
 :: ============================================================
 :: SECTION 8: ROBLOX VERSIONS + DLL INJECTION
@@ -353,9 +377,14 @@ for %%D in (
         )
     )
 )
-if exist "D:\" (
-    for /f "delims=" %%F in ('dir /b "D:\" 2^>nul ^| findstr /i "%FULLKW%"') do (
-        set "HITSECTION=FULL SCAN D ROOT" & set "HITPATH=%%F" & call :flag_hit
+:: Full all-drives .json scan - keyword match in filename or contents
+for /f "tokens=1" %%V in ('wmic logicaldisk get DeviceID 2^>nul ^| findstr /r "[A-Z]:"') do (
+    if exist "%%V\" (
+        for /f "delims=" %%J in ('dir /s /b "%%V\*.json" 2^>nul ^| findstr /i "%FULLKW% ClientAppSettings fflag fastflag fflags"') do (
+            set "HITSECTION=JSON FILE" & set "HITPATH=%%J" & call :flag_hit
+            >>"%HITSFILE%" echo   [file contents below]
+            powershell -NoProfile -Command "Get-Content '%%J' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 30" >> "%HITSFILE%" 2>nul
+        )
     )
 )
 
