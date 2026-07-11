@@ -376,9 +376,9 @@ for /f "delims=" %%F in ('netsh advfirewall firewall show rule name=all 2^>nul ^
 >>"%HITSFILE%" echo.
 >>"%HITSFILE%" echo ====================================================
 if !SUSPCOUNT!==0 (
-    >>"%HITSFILE%" echo  RESULT : CLEAN - No suspicious findings.
+    >>"%HITSFILE%" echo  RESULT : CLEAN - No suspicious findings
 ) else (
-    >>"%HITSFILE%" echo  RESULT : SUSPICIOUS - !SUSPCOUNT! hit(s) found.
+    >>"%HITSFILE%" echo  RESULT : SUSPICIOUS - !SUSPCOUNT! hit(s) found
 )
 >>"%HITSFILE%" echo ====================================================
 cls
