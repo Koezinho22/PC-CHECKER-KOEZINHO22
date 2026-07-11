@@ -295,7 +295,8 @@ if exist "%LOC3%" (
         set "HITSECTION=ROBLOX VERSIONS" & set "HITPATH=%%F" & call :flag_hit
     )
     for /f "delims=" %%F in ('dir /s /b "%LOC3%\*.dll" 2^>nul') do (
-        echo %%F | findstr /i "RobloxApp\|RobloxProxy\|ssl\|winhttp\|xinput\|d3d\|dxgi\|version\|dbghelp\|msvcp\|vcruntime\|concrt" >nul 2>nul
+        set "DLLNAME=%%~nxF"
+        echo !DLLNAME! | findstr /i "RobloxApp RobloxProxy ssl winhttp xinput d3d dxgi version dbghelp msvcp vcruntime concrt" >nul 2>nul
         if errorlevel 1 (
             set "HITSECTION=UNEXPECTED DLL IN ROBLOX" & set "HITPATH=%%F" & call :flag_hit
         )
@@ -352,16 +353,20 @@ if exist "%BRAVE_H%" (
 :: SECTION 14: FULL C + D DRIVE SCAN (keywords only, no /s on root)
 :: ============================================================
 set "FULLKW=voidstrap velostrap xeno wave solara bootstrapper bytebreaker real medium volcano volt potassium sirhurt swift velocity vortex matcha lumen photon plexity fishtrap bloxstrap"
-:: Scan user profile recursively for keyword-named files
-for /f "delims=" %%F in ('dir /s /b "%USERPROFILE%" 2^>nul ^| findstr /i "%FULLKW%"') do (
-    set "HITSECTION=FULL SCAN C USER" & set "HITPATH=%%F" & call :flag_hit
+:: Scan targeted high-value dirs only (fast)
+for %%D in (
+    "%USERPROFILE%\Downloads" "%USERPROFILE%\Desktop" "%USERPROFILE%\Documents"
+    "%APPDATA%" "%LOCALAPPDATA%" "%TEMP%" "C:\Windows\Temp"
+) do (
+    if exist %%D (
+        for /f "delims=" %%F in ('dir /b %%D 2^>nul ^| findstr /i "%FULLKW%"') do (
+            set "HITSECTION=FULL SCAN FILE" & set "HITPATH=%%~D\%%F" & call :flag_hit
+        )
+    )
 )
 if exist "D:\" (
     for /f "delims=" %%F in ('dir /b "D:\" 2^>nul ^| findstr /i "%FULLKW%"') do (
         set "HITSECTION=FULL SCAN D ROOT" & set "HITPATH=%%F" & call :flag_hit
-    )
-    for /f "delims=" %%F in ('dir /s /b "D:\Users" 2^>nul ^| findstr /i "%FULLKW%"') do (
-        set "HITSECTION=FULL SCAN D USERS" & set "HITPATH=%%F" & call :flag_hit
     )
 )
 
@@ -369,10 +374,10 @@ if exist "D:\" (
 :: SECTION 15: FIREWALL ALLOWED APPS
 :: ============================================================
 >>"%HITSFILE%" echo [Windows Firewall - Allowed Apps]
-powershell -NoProfile -Command "Get-NetFirewallRule -Enabled True -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | ForEach-Object { $prog = ($_ | Get-NetFirewallApplicationFilter -ErrorAction SilentlyContinue).Program; if($prog -and $prog -ne 'Any'){\"  $($_.DisplayName) -> $prog\"} } | Sort-Object -Unique" >> "%HITSFILE%" 2>nul
+netsh advfirewall firewall show rule name=all dir=in action=allow >> "%HITSFILE%" 2>nul
 >>"%HITSFILE%" echo.
 :: Flag firewall rules matching cheat keywords
-for /f "delims=" %%F in ('powershell -NoProfile -Command "Get-NetFirewallRule -Enabled True -ErrorAction SilentlyContinue | Where-Object {$_.DisplayName -match \"voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|executor\"} | ForEach-Object {$_.DisplayName}" 2^>nul') do (
+for /f "delims=" %%F in ('netsh advfirewall firewall show rule name=all 2^>nul ^| findstr /i "voidstrap velostrap xeno solara bootstrapper bytebreaker sirhurt fishtrap executor bloxstrap"') do (
     set "HITSECTION=FIREWALL ALLOWED APP" & set "HITPATH=%%F" & call :flag_hit
 )
 
