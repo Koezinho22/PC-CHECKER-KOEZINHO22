@@ -273,7 +273,7 @@ for %%D in ("%VS_APP%" "%VS_LOC%" "%BS_APP%") do (
         for /f "delims=" %%F in ('dir /s /b %%D 2^>nul ^| findstr /i "ClientAppSettings fflag fastflag config settings" 2^>nul') do (
             set "HITSECTION=VOIDSTRAP FFLAGS FILE" & set "HITPATH=%%F" & call :flag_hit
             >> "%HITSFILE%" echo [Contents of %%F]
-            type "%%F" >> "%HITSFILE%" 2>nul
+            powershell -NoProfile -Command "Get-Content '%%F' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 50" >> "%HITSFILE%" 2>nul
             >> "%HITSFILE%" echo.
         )
     )
@@ -283,7 +283,7 @@ set "RBX_FFLAGS=%LOCALAPPDATA%\Roblox\GlobalBasicSettings_13.xml"
 if exist "%RBX_FFLAGS%" (
     set "HITSECTION=ROBLOX FFLAGS SETTINGS" & set "HITPATH=%RBX_FFLAGS%" & call :flag_hit
     >> "%HITSFILE%" echo [Contents]
-    type "%RBX_FFLAGS%" >> "%HITSFILE%" 2>nul
+    powershell -NoProfile -Command "Get-Content '%RBX_FFLAGS%' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 50" >> "%HITSFILE%" 2>nul
     >> "%HITSFILE%" echo.
 )
 
@@ -406,7 +406,7 @@ if !SUSPCOUNT!==0 (
 ) else (
     echo  [!!] SUSPICIOUS FINDINGS:
     echo.
-    type "%HITSFILE%"
+    powershell -NoProfile -Command "Get-Content '%HITSFILE%' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object { $_.Trim() -ne '' } | Select-Object -First 200 | Write-Host"
 )
 echo.
 echo ============================================================
