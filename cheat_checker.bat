@@ -251,14 +251,9 @@ for /f "delims=" %%D in ('ipconfig /displaydns 2^>nul ^| findstr /i "voidstrap v
 for /f "delims=" %%H in ('type "C:\Windows\System32\drivers\etc\hosts" 2^>nul ^| findstr /v "^#" ^| findstr /v "^$" ^| findstr /v "localhost" ^| findstr /r "[0-9]"') do (
     set "HITSECTION=HOSTS FILE" & set "HITPATH=%%H" & call :flag_hit
 )
->>"%HITSFILE%" echo [Active Outbound Connections]
-powershell -NoProfile -Command "Get-NetTCPConnection -State Established 2>$null | Where-Object {$_.RemoteAddress -notmatch '^(127\.|0\.|::1|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)'} | ForEach-Object { $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; \"  $($proc.Name) (PID $($_.OwningProcess)) -> $($_.RemoteAddress):$($_.RemotePort)\" } | Sort-Object -Unique" >> "%HITSFILE%" 2>nul
+>>"%HITSFILE%" echo [Active External Connections]
+powershell -NoProfile -Command "Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue | Where-Object {$_.RemoteAddress -notmatch '^(127\.|0\.|::1|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)'} | ForEach-Object { $p=Get-Process -Id $_.OwningProcess -EA SilentlyContinue; \"  $($p.Name) -> $($_.RemoteAddress):$($_.RemotePort)\" } | Sort-Object -Unique | Select-Object -First 20" >> "%HITSFILE%" 2>nul
 >>"%HITSFILE%" echo.
->>"%HITSFILE%" echo [Per-App Network Data Usage]
-powershell -NoProfile -Command "Get-NetAdapterStatistics -ErrorAction SilentlyContinue | ForEach-Object { \"  $($_.Name) - Sent: $([math]::Round($_.SentBytes/1MB,2)) MB  Received: $([math]::Round($_.ReceivedBytes/1MB,2)) MB\" }" >> "%HITSFILE%" 2>nul
->>"%HITSFILE%" echo.
->>"%HITSFILE%" echo [Recent Network Activity by Process]
-powershell -NoProfile -Command "Get-NetTCPConnection -ErrorAction SilentlyContinue | Where-Object {$_.State -ne 'Closed'} | ForEach-Object { $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; if($proc){\"  $($proc.Name) -> $($_.RemoteAddress):$($_.RemotePort) [$($_.State)]\"} } | Sort-Object -Unique | Select-Object -First 40" >> "%HITSFILE%" 2>nul
 
 :: ============================================================
 :: SECTION 7b: VOIDSTRAP / BLOXSTRAP SETTINGS + FFLAGS
@@ -331,9 +326,6 @@ for /f "delims=" %%F in ('dir /b "%LOC4%\*.exe" "%LOC4%\*.dll" 2^>nul') do (
 :: ============================================================
 :: SECTION 12: TASK MANAGER - ALL RUNNING PROCESSES + DETAILS
 :: ============================================================
->>"%HITSFILE%" echo [All Running Processes]
-powershell -NoProfile -Command "Get-Process | Sort-Object CPU -Descending | Select-Object -First 60 | ForEach-Object { \"  $($_.Name) (PID $($_.Id)) CPU:$([math]::Round($_.CPU,1)) MEM:$([math]::Round($_.WorkingSet64/1MB,1))MB Path:$($_.Path)\" }" >> "%HITSFILE%" 2>nul
->>"%HITSFILE%" echo.
 :: Flag any processes matching cheat keywords
 for /f "tokens=1" %%P in ('tasklist /fo csv /nh 2^>nul ^| findstr /i "voidstrap velostrap xeno wave solara bootstrapper bytebreaker volcano volt potassium sirhurt swift velocity vortex matcha lumen photon plexity fishtrap executor"') do (
     set "HITSECTION=TASK MANAGER PROCESS" & set "HITPATH=%%P" & call :flag_hit
@@ -373,12 +365,9 @@ if exist "D:\" (
 :: ============================================================
 :: SECTION 15: FIREWALL ALLOWED APPS
 :: ============================================================
->>"%HITSFILE%" echo [Windows Firewall - Allowed Apps]
-netsh advfirewall firewall show rule name=all dir=in action=allow >> "%HITSFILE%" 2>nul
->>"%HITSFILE%" echo.
-:: Flag firewall rules matching cheat keywords
+:: Flag firewall rules matching cheat keywords only
 for /f "delims=" %%F in ('netsh advfirewall firewall show rule name=all 2^>nul ^| findstr /i "voidstrap velostrap xeno solara bootstrapper bytebreaker sirhurt fishtrap executor bloxstrap"') do (
-    set "HITSECTION=FIREWALL ALLOWED APP" & set "HITPATH=%%F" & call :flag_hit
+    set "HITSECTION=FIREWALL RULE" & set "HITPATH=%%F" & call :flag_hit
 )
 
 :: ============================================================
