@@ -117,8 +117,6 @@ set "LOC3=%LOCALAPPDATA%\Roblox\Versions"
 set "LOC4=%USERPROFILE%\Downloads"
 set "LOC5=%APPDATA%\Microsoft\Windows\Recent"
 set "LOC6=C:\Windows\Prefetch"
-set "LOC7=C:\"
-set "LOC8=D:\"
 set "LOC_TEMP=%TEMP%"
 set "LOC_TEMP2=C:\Windows\Temp"
 
@@ -193,17 +191,7 @@ for /f "delims=" %%F in ('netsh advfirewall firewall show rule name=all 2^>nul ^
 :: SECTION 6: BROWSER HISTORY
 :: ============================================================
 set "CHROME_H=%LOCALAPPDATA%\Google\Chrome\User Data\Default\History"
-if exist "%CHROME_H%" (
-    for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%CHROME_H%';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor|script'} | Select-Object -Unique" 2^>nul') do (
-        set "HITSECTION=CHROME HISTORY" & set "HITPATH=%%H" & call :flag_hit
-    )
-)
 set "EDGE_H=%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\History"
-if exist "%EDGE_H%" (
-    for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%EDGE_H%';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor|script'} | Select-Object -Unique" 2^>nul') do (
-        set "HITSECTION=EDGE HISTORY" & set "HITPATH=%%H" & call :flag_hit
-    )
-)
 set "FF_BASE=%APPDATA%\Mozilla\Firefox\Profiles"
 if exist "%FF_BASE%" (
     for /d %%P in ("%FF_BASE%\*") do (
@@ -211,6 +199,23 @@ if exist "%FF_BASE%" (
             for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%%P\places.sqlite';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor|script'} | Select-Object -Unique" 2^>nul') do (
                 set "HITSECTION=FIREFOX HISTORY" & set "HITPATH=%%H" & call :flag_hit
             )
+        )
+    )
+)
+
+:: Scan ALL Chrome profiles (Profile 1, Profile 2 etc)
+for /d %%P in ("%LOCALAPPDATA%\Google\Chrome\User Data\Profile*" "%LOCALAPPDATA%\Google\Chrome\User Data\Default") do (
+    if exist "%%P\History" (
+        for /f "delims=" %%H in ('powershell -NoProfile -Command "$p=''%%P\History'';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split ''[^\x20-\x7E\n]'') | Where-Object {$_.Length -gt 10 -and $_ -match ''voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|roblox|exploit|cheat|hack|inject|executor|script''} | Select-Object -Unique" 2^>nul') do (
+            set "HITSECTION=CHROME PROFILE HISTORY" & set "HITPATH=%%H" & call :flag_hit
+        )
+    )
+)
+:: Scan ALL Edge profiles
+for /d %%P in ("%LOCALAPPDATA%\Microsoft\Edge\User Data\Profile*" "%LOCALAPPDATA%\Microsoft\Edge\User Data\Default") do (
+    if exist "%%P\History" (
+        for /f "delims=" %%H in ('powershell -NoProfile -Command "$p=''%%P\History'';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split ''[^\x20-\x7E\n]'') | Where-Object {$_.Length -gt 10 -and $_ -match ''voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|roblox|exploit|cheat|hack|inject|executor|script''} | Select-Object -Unique" 2^>nul') do (
+            set "HITSECTION=EDGE PROFILE HISTORY" & set "HITPATH=%%H" & call :flag_hit
         )
     )
 )
@@ -253,6 +258,12 @@ for /f "delims=" %%H in ('type "C:\Windows\System32\drivers\etc\hosts" 2^>nul ^|
 )
 >>"%HITSFILE%" echo [Active External Connections]
 powershell -NoProfile -Command "Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue | Where-Object {$_.RemoteAddress -notmatch '^(127\.|0\.|::1|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)'} | ForEach-Object { $p=Get-Process -Id $_.OwningProcess -EA SilentlyContinue; \"  $($p.Name) -> $($_.RemoteAddress):$($_.RemotePort)\" } | Sort-Object -Unique | Select-Object -First 20 | ForEach-Object { $_ -replace '[^\x20-\x7E]','' }" >> "%HITSFILE%" 2>nul
+>>"%HITSFILE%" echo.
+>>"%HITSFILE%" echo [Windows Data Usage - Top Apps by Network]
+powershell -NoProfile -Command "Get-NetAdapterStatistics -EA SilentlyContinue | ForEach-Object { \"  $($_.Name) Sent:$([math]::Round($_.SentBytes/1MB,1))MB Recv:$([math]::Round($_.ReceivedBytes/1MB,1))MB\" }" >> "%HITSFILE%" 2>nul
+>>"%HITSFILE%" echo.
+>>"%HITSFILE%" echo [Recent App Network Usage - Windows SRUM]
+powershell -NoProfile -Command "Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles' -EA SilentlyContinue | Select-Object ProfileName,DateLastConnected | ForEach-Object { \"  $($_.ProfileName) last: $($_.DateLastConnected)\" } | Select-Object -First 20 | ForEach-Object { $_ -replace '[^\x20-\x7E]','' }" >> "%HITSFILE%" 2>nul
 
 :: ============================================================
 :: SECTION 7b: VOIDSTRAP / BLOXSTRAP SETTINGS + FFLAGS
@@ -355,10 +366,12 @@ for /f "tokens=1" %%P in ('tasklist /fo csv /nh 2^>nul ^| findstr /i "voidstrap 
 :: ============================================================
 :: SECTION 13: BRAVE BROWSER HISTORY
 :: ============================================================
-set "BRAVE_H=%APPDATA%\BraveSoftware\Brave-Browser\User Data\Default\History"
-if exist "%BRAVE_H%" (
-    for /f "delims=" %%H in ('powershell -NoProfile -Command "$p='%BRAVE_H%';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 10 -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|volcano|volt|potassium|sirhurt|swift|velocity|vortex|matcha|lumen|photon|plexity|fishtrap|roblox|exploit|cheat|hack|inject|executor|script'} | Select-Object -Unique" 2^>nul') do (
-        set "HITSECTION=BRAVE HISTORY" & set "HITPATH=%%H" & call :flag_hit
+:: Scan ALL Brave profiles
+for /d %%P in ("%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data\Profile*" "%LOCALAPPDATA%\BraveSoftware\Brave-Browser\User Data\Default") do (
+    if exist "%%P\History" (
+        for /f "delims=" %%H in ('powershell -NoProfile -Command "$p=''%%P\History'';$b=[System.IO.File]::ReadAllBytes($p);$t=[System.Text.Encoding]::ASCII.GetString($b);($t -split ''[^\x20-\x7E\n]'') | Where-Object {$_.Length -gt 10 -and $_ -match ''voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|roblox|exploit|cheat|hack|inject|executor|script''} | Select-Object -Unique" 2^>nul') do (
+            set "HITSECTION=BRAVE HISTORY" & set "HITPATH=%%H" & call :flag_hit
+        )
     )
 )
 
