@@ -130,7 +130,7 @@ set "LOC_TEMP2=C:\Windows\Temp"
 goto skip_flag
 :flag_hit
 set /a SUSPCOUNT+=1
->>"%HITSFILE%" echo [!SUSPCOUNT!] !HITSECTION! ^| !HITPATH!
+>>"%HITSFILE%" echo [!SUSPCOUNT!] !HITSECTION! - !HITPATH!
 goto :eof
 :skip_flag
 
@@ -232,9 +232,9 @@ for %%H in ("%CHROME_H%" "%EDGE_H%") do (
 :: Discord cache - scan for URLs containing cheat/executor keywords
 set "DISCORD_CACHE=%APPDATA%\discord\Cache\Cache_Data"
 if exist "%DISCORD_CACHE%" (
-    >>"%HITSFILE%" echo [Discord Cached URLs - cheat keywords]
-    powershell -NoProfile -Command "$d='%DISCORD_CACHE%'; Get-ChildItem $d -File -ErrorAction SilentlyContinue | ForEach-Object { try { $t=[System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($_.FullName)); ($t -split '[^\x20-\x7E\n]') | Where-Object {$_.Length -gt 15 -and $_ -match 'http' -and $_ -match 'voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|executor|inject|cheat|hack|exploit|\.exe|mediafire|cdn\.discordapp'} } catch {} } | Select-Object -Unique" >> "%HITSFILE%" 2>nul
-    >>"%HITSFILE%" echo.
+    for /f "delims=" %%U in ('powershell -NoProfile -Command "$d=''%DISCORD_CACHE%''; Get-ChildItem $d -File -EA SilentlyContinue | ForEach-Object { try { $t=[System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($_.FullName)); ($t -split ''[^\x20-\x7E\n]'') | Where-Object {$_.Length -gt 15 -and $_ -match ''http'' -and $_ -match ''voidstrap|velostrap|xeno|solara|bootstrapper|bytebreaker|sirhurt|fishtrap|executor|inject|cheat|hack|exploit''} } catch {} } | Select-Object -Unique -First 20" 2^>nul') do (
+        set "HITSECTION=DISCORD CACHE URL" & set "HITPATH=%%U" & call :flag_hit
+    )
 )
 :: Discord downloaded files (attachments saved locally)
 set "DISCORD_DL=%USERPROFILE%\Downloads"
@@ -252,8 +252,7 @@ for /f "delims=" %%H in ('type "C:\Windows\System32\drivers\etc\hosts" 2^>nul ^|
     set "HITSECTION=HOSTS FILE" & set "HITPATH=%%H" & call :flag_hit
 )
 >>"%HITSFILE%" echo [Active External Connections]
-powershell -NoProfile -Command "Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue | Where-Object {$_.RemoteAddress -notmatch '^(127\.|0\.|::1|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)'} | ForEach-Object { $p=Get-Process -Id $_.OwningProcess -EA SilentlyContinue; \"  $($p.Name) -> $($_.RemoteAddress):$($_.RemotePort)\" } | Sort-Object -Unique | Select-Object -First 20" >> "%HITSFILE%" 2>nul
->>"%HITSFILE%" echo.
+powershell -NoProfile -Command "Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue | Where-Object {$_.RemoteAddress -notmatch '^(127\.|0\.|::1|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)'} | ForEach-Object { $p=Get-Process -Id $_.OwningProcess -EA SilentlyContinue; \"  $($p.Name) -> $($_.RemoteAddress):$($_.RemotePort)\" } | Sort-Object -Unique | Select-Object -First 20 | ForEach-Object { $_ -replace '[^\x20-\x7E]','' }" >> "%HITSFILE%" 2>nul
 
 :: ============================================================
 :: SECTION 7b: VOIDSTRAP / BLOXSTRAP SETTINGS + FFLAGS
@@ -267,9 +266,8 @@ for %%D in ("%VS_APP%" "%VS_LOC%" "%BS_APP%") do (
         :: Dump any FFlag config files found
         for /f "delims=" %%F in ('dir /s /b %%D 2^>nul ^| findstr /i "ClientAppSettings fflag fastflag config settings" 2^>nul') do (
             set "HITSECTION=VOIDSTRAP FFLAGS FILE" & set "HITPATH=%%F" & call :flag_hit
-            >> "%HITSFILE%" echo [Contents of %%F]
-            powershell -NoProfile -Command "Get-Content '%%F' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 50" >> "%HITSFILE%" 2>nul
-            >> "%HITSFILE%" echo.
+            >>"%HITSFILE%" echo   [file contents below]
+            powershell -NoProfile -Command "Get-Content '%%F' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 30" >> "%HITSFILE%" 2>nul
         )
     )
 )
@@ -277,9 +275,8 @@ for %%D in ("%VS_APP%" "%VS_LOC%" "%BS_APP%") do (
 set "RBX_FFLAGS=%LOCALAPPDATA%\Roblox\GlobalBasicSettings_13.xml"
 if exist "%RBX_FFLAGS%" (
     set "HITSECTION=ROBLOX FFLAGS SETTINGS" & set "HITPATH=%RBX_FFLAGS%" & call :flag_hit
-    >> "%HITSFILE%" echo [Contents]
-    powershell -NoProfile -Command "Get-Content '%RBX_FFLAGS%' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 50" >> "%HITSFILE%" 2>nul
-    >> "%HITSFILE%" echo.
+    >>"%HITSFILE%" echo   [file contents below]
+    powershell -NoProfile -Command "Get-Content '%RBX_FFLAGS%' -ErrorAction SilentlyContinue | ForEach-Object { $_ -replace '[^\x20-\x7E]','' } | Where-Object {$_.Trim() -ne ''} | Select-Object -First 30" >> "%HITSFILE%" 2>nul
 )
 
 :: ============================================================
@@ -378,7 +375,7 @@ for /f "delims=" %%F in ('netsh advfirewall firewall show rule name=all 2^>nul ^
 if !SUSPCOUNT!==0 (
     >>"%HITSFILE%" echo  RESULT : CLEAN - No suspicious findings
 ) else (
-    >>"%HITSFILE%" echo  RESULT : SUSPICIOUS - !SUSPCOUNT! hit(s) found
+    >>"%HITSFILE%" echo  RESULT : SUSPICIOUS - !SUSPCOUNT! hits found
 )
 >>"%HITSFILE%" echo ====================================================
 cls
